@@ -1,0 +1,71 @@
+name: Autograding Tests
+on:
+  push:
+  repository_dispatch:
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    # Cachear node_modules
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    
+    - name: Instalar dependencias
+      run: npm install
+    
+    - name: Ejercicio 14 - Index
+      id: ejercicio-14-index
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 14 - Index
+        setup-command: ''
+        command: npm test tests/ejercicio/14-index.test.js
+        timeout: 10
+        max-score: 33
+        
+    - name: Ejercicio 14 - Blog
+      id: ejercicio-14-blog
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 14 - Blog
+        setup-command: ''
+        command: npm test tests/ejercicio/14-blog.test.js
+        timeout: 10
+        max-score: 33
+        
+    - name: Ejercicio 14 - Empresa
+      id: ejercicio-14-empresa
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 14 - Empresa
+        setup-command: ''
+        command: npm test tests/ejercicio/14-empresa.test.js
+        timeout: 10
+        max-score: 34
+
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        EJERCICIO-14-INDEX_RESULTS: "${{steps.ejercicio-14-index.outputs.result}}"
+        EJERCICIO-14-BLOG_RESULTS: "${{steps.ejercicio-14-blog.outputs.result}}"
+        EJERCICIO-14-EMPRESA_RESULTS: "${{steps.ejercicio-14-empresa.outputs.result}}"
+      with:
+        runners: ejercicio-14-index, ejercicio-14-blog, ejercicio-14-empresa
